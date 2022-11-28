@@ -1,12 +1,9 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿#nullable enable
 namespace NotionAPI.Data
 {
+    using Newtonsoft.Json;
+    using System;
+    using System.Collections.Generic;
     public class NotionDataObject
     {
         [JsonProperty("id")]
@@ -39,6 +36,11 @@ namespace NotionAPI.Data
 
     public partial class NotionPageTitle
     {
+        public NotionPageTitle() 
+        {
+            this.TitleObj = new List<NotionText>();
+        }
+
         [JsonProperty("title")]
         public List<NotionText>? TitleObj { get; set; }
     }

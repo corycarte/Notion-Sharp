@@ -1,23 +1,31 @@
-﻿namespace NotionAPI
+﻿#nullable enable
+namespace NotionAPI
 {
-    using Newtonsoft.Json;
     using NotionAPI.Blocks;
     using NotionAPI.Data;
-    using NotionAPI.Databases;
     using NotionAPI.Pages;
     using NotionAPI.Utilities;
-    using System.Reflection.PortableExecutable;
+
+    using System.Net.Http;
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using System.Text;
+    using Newtonsoft.Json;
 
     public class Notion : INotion
     {
         #region Class Members
+        private static readonly HttpClient _client = new HttpClient();
+        
         private const string _apiBase = "https://api.notion.com/v1";
         private const string _dbEndpoint = $"{_apiBase}/databases";
         private const string _pageEndpoint = $"{_apiBase}/pages";
         private const string _notionVersion = "2022-06-28";
 
-        private HttpClient _client;
         private string _apiKey;
+        private Dictionary<string, string> _headers;
+
         public string ApiKey
         {
             private get
@@ -31,16 +39,12 @@
             }
         }
 
-        private INotionPage _pgOps;
-        private INotionBlock _blockOps;
-        private Dictionary<string, string> _headers;
         // TODO: Implement logging with ILogger
         #endregion
         #region Constructors
 
-        public Notion(HttpClient client)
+        public Notion()
         {
-            _client = client;
             _apiKey = string.Empty;
             _headers = new Dictionary<string, string> {
                 { "Accept", "application/json" },
@@ -49,9 +53,8 @@
             };
         }
 
-        public Notion(HttpClient client, string apiKey)
+        public Notion(string apiKey)
         {
-            _client = client;
             _apiKey = apiKey;
             _headers = new Dictionary<string, string> {
                 { "Accept", "application/json" },
@@ -82,6 +85,12 @@
                 }
             }
 
+            return request;
+        }
+
+        private HttpRequestMessage addContent(HttpRequestMessage request, string bodyContent)
+        {
+            request.Content = new StringContent(bodyContent, Encoding.UTF8, "application/json");
             return request;
         }
         private string sendAndProcessRequest(HttpRequestMessage req)
@@ -131,6 +140,7 @@
         public async Task<string> queryDatabaseAsync(string dbId, string query)
         {
             var request = buildRequest(HttpMethod.Post, $"{_dbEndpoint}/{dbId}/query");
+            request = addContent(request, $"{{ \"filter\": {query}}}");
             var response = await sendAndProcessRequestAsync(request);
             return response;
         }
